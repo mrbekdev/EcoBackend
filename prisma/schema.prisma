@@ -21,6 +21,8 @@ model User {
     role         UserRole
     balance      Int           @default(0)
     name         String?
+    phone        String?       // Added phone field
+    companyName  String?       // Added company name field
     location     String?
     createdAt    DateTime      @default(now())
     transactions Transaction[]

@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Logger } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { LoginDto } from './dto/login.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 
@@ -32,7 +33,6 @@ export class UsersController {
     return { success: true, user: rest, token };
   }
 
-  // Debug endpoint - shows full user records (including password hashes). Only enabled in non-production.
   @Get('debug/users')
   async debugUsers() {
     if (process.env.NODE_ENV === 'production') {
@@ -55,10 +55,57 @@ export class UsersController {
 
   @Post('users')
   async create(@Body() body: any) {
-    // hash password if provided
     if (body.password) {
       body.password = await bcrypt.hash(body.password, 10);
     }
     return this.usersService.create(body);
+  }
+
+  @Put('users/:id/password')
+  async changePassword(
+    @Param('id') id: string,
+    @Body() body: { currentPassword: string; newPassword: string }
+  ) {
+    try {
+      const user = await this.usersService.findById(id);
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      const valid = await bcrypt.compare(body.currentPassword, (user as any).password);
+      if (!valid) {
+        return { success: false, message: 'Current password is incorrect' };
+      }
+
+      if (!body.newPassword || body.newPassword.length < 6) {
+        return { success: false, message: 'New password must be at least 6 characters long' };
+      }
+
+      const hashedPassword = await bcrypt.hash(body.newPassword, 10);
+      await this.usersService.updatePassword(id, hashedPassword);
+
+      return { success: true, message: 'Password updated successfully' };
+    } catch (error) {
+      this.logger.error(`Error changing password for user ${id}:`, error);
+      return { success: false, message: 'Failed to update password' };
+    }
+  }
+
+  @Put('users/:id')
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto
+  ) {
+    try {
+      const updatedUser = await this.usersService.updateUser(id, updateUserDto);
+      return {
+        success: true,
+        message: 'User updated successfully',
+        user: updatedUser
+      };
+    } catch (error) {
+      this.logger.error(`Error updating user ${id}:`, error);
+      throw new Error('Failed to update user');
+    }
   }
 }
