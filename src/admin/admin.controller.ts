@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Param, BadRequestException, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import * as bcrypt from 'bcryptjs';
 
@@ -57,5 +57,36 @@ export class AdminController {
   @Get('stats')
   async getStats() {
     return this.adminService.getStats();
+  }
+
+  @Put('users/:id')
+  async updateUser(@Param('id') id: string, @Body() body: any) {
+    return this.adminService.updateUser(id, body);
+  }
+
+  @Delete('users/:id')
+  async deleteUser(@Param('id') id: string) {
+    return this.adminService.deleteUser(id);
+  }
+
+  @Post('block-phone')
+  async blockPhone(@Body() body: { phone: string; reason?: string; blockedBy?: string }) {
+    return this.adminService.blockPhone(body.phone, body.reason, body.blockedBy);
+  }
+
+  @Delete('block-phone/:phone')
+  async unblockPhone(@Param('phone') phone: string) {
+    return this.adminService.unblockPhone(phone);
+  }
+
+  @Get('blocked-phones')
+  async getBlockedPhones() {
+    return this.adminService.getBlockedPhones();
+  }
+
+  @Get('check-phone')
+  async checkPhone(@Query('phone') phone: string) {
+    const isBlocked = await this.adminService.isPhoneBlocked(phone);
+    return { phone, isBlocked };
   }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Logger, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { LoginDto } from './dto/login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -55,6 +55,14 @@ export class UsersController {
 
   @Post('users')
   async create(@Body() body: any) {
+    // Check if phone is blocked
+    if (body.phone) {
+      const isBlocked = await this.usersService.isPhoneBlocked(body.phone);
+      if (isBlocked) {
+        throw new BadRequestException('Bu telefon raqami bloklangan');
+      }
+    }
+    
     if (body.password) {
       body.password = await bcrypt.hash(body.password, 10);
     }
@@ -64,7 +72,7 @@ export class UsersController {
   @Put('users/:id/password')
   async changePassword(
     @Param('id') id: string,
-    @Body() body: { currentPassword: string; newPassword: string }
+    @Body() body: { newPassword: string }
   ) {
     try {
       const user = await this.usersService.findById(id);
@@ -72,13 +80,8 @@ export class UsersController {
         return { success: false, message: 'User not found' };
       }
 
-      const valid = await bcrypt.compare(body.currentPassword, (user as any).password);
-      if (!valid) {
-        return { success: false, message: 'Current password is incorrect' };
-      }
-
-      if (!body.newPassword || body.newPassword.length < 6) {
-        return { success: false, message: 'New password must be at least 6 characters long' };
+      if (!body.newPassword || body.newPassword.length < 4) {
+        return { success: false, message: 'New password must be at least 4 characters long' };
       }
 
       const hashedPassword = await bcrypt.hash(body.newPassword, 10);

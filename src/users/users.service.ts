@@ -55,4 +55,11 @@ export class UsersService {
       }
     });
   }
+
+  async isPhoneBlocked(phone: string): Promise<boolean> {
+    const blocked = await this.prisma.blockedPhone.findUnique({
+      where: { phone }
+    });
+    return !!blocked;
+  }
 }

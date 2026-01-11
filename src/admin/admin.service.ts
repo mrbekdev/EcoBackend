@@ -86,4 +86,60 @@ export class AdminService {
       totalTransactions
     };
   }
+
+  async updateUser(id: string, data: any) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        name: data.name,
+        username: data.username,
+        location: data.location,
+        role: data.role,
+        phone: data.phone,
+      },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        name: true,
+        location: true,
+        balance: true,
+        phone: true,
+        createdAt: true
+      }
+    });
+  }
+
+  async deleteUser(id: string) {
+    return this.prisma.user.delete({
+      where: { id }
+    });
+  }
+
+  async blockPhone(phone: string, reason?: string, blockedBy?: string) {
+    return this.prisma.blockedPhone.upsert({
+      where: { phone },
+      update: { reason, blockedBy, updatedAt: new Date() },
+      create: { phone, reason, blockedBy }
+    });
+  }
+
+  async unblockPhone(phone: string) {
+    return this.prisma.blockedPhone.delete({
+      where: { phone }
+    });
+  }
+
+  async isPhoneBlocked(phone: string): Promise<boolean> {
+    const blocked = await this.prisma.blockedPhone.findUnique({
+      where: { phone }
+    });
+    return !!blocked;
+  }
+
+  async getBlockedPhones() {
+    return this.prisma.blockedPhone.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+  }
 }

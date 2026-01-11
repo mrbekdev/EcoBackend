@@ -49,3 +49,22 @@ model Transaction {
     user        User     @relation(fields: [userId], references: [id])
     userId      String
 }
+
+model MaterialPrice {
+    id          String   @id @default(uuid())
+    material    String
+    price       Int
+    userId      String?  // null bo'lsa global, aks holda user-specific
+    role        UserRole? // factory yoki collection_point
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}
+
+model BlockedPhone {
+    id          String   @id @default(uuid())
+    phone       String   @unique
+    reason      String?
+    blockedBy   String?  // Admin user ID
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}

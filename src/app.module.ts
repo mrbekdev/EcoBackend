@@ -9,6 +9,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StatsModule } from './stats/stats.module';
 import { AdminModule } from './admin/admin.module';
+import { MaterialPricesModule } from './material-prices/material-prices.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AdminModule } from './admin/admin.module';
     TransactionsModule,
     StatsModule,
     AdminModule,
+    MaterialPricesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
